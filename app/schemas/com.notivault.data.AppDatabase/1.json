@@ -1,0 +1,236 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "3fbdc3deedc5a231805bb1861ebe7b1a",
+    "entities": [
+      {
+        "tableName": "notifications",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `packageName` TEXT NOT NULL, `appLabel` TEXT NOT NULL, `notificationKey` TEXT NOT NULL, `notificationId` INTEGER NOT NULL, `tag` TEXT, `postedAt` INTEGER NOT NULL, `receivedAt` INTEGER NOT NULL, `channelId` TEXT, `category` TEXT, `title` TEXT, `text` TEXT, `bigText` TEXT, `subText` TEXT, `summaryText` TEXT, `infoText` TEXT, `textLines` TEXT, `messages` TEXT, `tickerText` TEXT, `fullText` TEXT NOT NULL, `rawExtras` TEXT NOT NULL, `dedupHash` TEXT NOT NULL, `amount` REAL, `currency` TEXT, `direction` TEXT, `counterparty` TEXT, `balance` REAL, `reference` TEXT, `parserId` TEXT, `parsedAt` INTEGER)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "packageName",
+            "columnName": "packageName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "appLabel",
+            "columnName": "appLabel",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "notificationKey",
+            "columnName": "notificationKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "notificationId",
+            "columnName": "notificationId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tag",
+            "columnName": "tag",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "postedAt",
+            "columnName": "postedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "receivedAt",
+            "columnName": "receivedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "channelId",
+            "columnName": "channelId",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "category",
+            "columnName": "category",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "text",
+            "columnName": "text",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "bigText",
+            "columnName": "bigText",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "subText",
+            "columnName": "subText",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "summaryText",
+            "columnName": "summaryText",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "infoText",
+            "columnName": "infoText",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "textLines",
+            "columnName": "textLines",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "messages",
+            "columnName": "messages",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "tickerText",
+            "columnName": "tickerText",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "fullText",
+            "columnName": "fullText",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rawExtras",
+            "columnName": "rawExtras",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dedupHash",
+            "columnName": "dedupHash",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "amount",
+            "columnName": "amount",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "currency",
+            "columnName": "currency",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "direction",
+            "columnName": "direction",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "counterparty",
+            "columnName": "counterparty",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "balance",
+            "columnName": "balance",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "reference",
+            "columnName": "reference",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "parserId",
+            "columnName": "parserId",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "parsedAt",
+            "columnName": "parsedAt",
+            "affinity": "INTEGER",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_notifications_packageName",
+            "unique": false,
+            "columnNames": [
+              "packageName"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_notifications_packageName` ON `${TABLE_NAME}` (`packageName`)"
+          },
+          {
+            "name": "index_notifications_postedAt",
+            "unique": false,
+            "columnNames": [
+              "postedAt"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_notifications_postedAt` ON `${TABLE_NAME}` (`postedAt`)"
+          },
+          {
+            "name": "index_notifications_dedupHash",
+            "unique": true,
+            "columnNames": [
+              "dedupHash"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_notifications_dedupHash` ON `${TABLE_NAME}` (`dedupHash`)"
+          }
+        ],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3fbdc3deedc5a231805bb1861ebe7b1a')"
+    ]
+  }
+}
