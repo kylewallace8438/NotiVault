@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -18,6 +19,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -32,14 +35,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -113,7 +121,7 @@ private fun DetailBody(n: NotificationEntity, modifier: Modifier) {
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
         if (n.parserId != null) {
-            Section("Parsed") {
+            Section("Transaction details") {
                 if (n.amount != null) {
                     Text(
                         Fmt.money(n.amount, n.currency, n.direction),
@@ -122,7 +130,7 @@ private fun DetailBody(n: NotificationEntity, modifier: Modifier) {
                         color = amountColor(n.direction),
                     )
                 }
-                Field("Direction", n.direction)
+                DirectionField(n.direction)
                 Field("Counterparty", n.counterparty)
                 Field("Balance after", n.balance?.let { Fmt.number(it) })
                 Field("Reference", n.reference)
@@ -136,38 +144,83 @@ private fun DetailBody(n: NotificationEntity, modifier: Modifier) {
             }
         }
 
-        Section("Fields") {
-            Field("Title", n.title)
-            Field("Text", n.text)
-            Field("Big text", n.bigText)
-            Field("Sub text", n.subText)
-            Field("Summary", n.summaryText)
-            Field("Info", n.infoText)
-            Field("Inbox lines", n.textLines)
-            Field("Messages", n.messages)
-            Field("Ticker", n.tickerText)
-            Field("Package", n.packageName)
-            Field("Channel", n.channelId)
-            Field("Category", n.category)
-            Field("Posted", Fmt.long(n.postedAt))
-            Field("Stored", Fmt.long(n.receivedAt))
-            Field("Notification key", n.notificationKey)
-            Field("Row id", n.id.toString())
-        }
+        TechnicalDetails(n)
+    }
+}
 
-        Section("Raw extras (JSON)") {
-            val pretty = remember(n.rawExtras) {
-                runCatching { JSONObject(n.rawExtras).toString(2) }.getOrDefault(n.rawExtras)
-            }
-            SelectionContainer {
-                Text(
-                    pretty,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 12.sp,
-                    lineHeight = 16.sp,
-                    modifier = Modifier.horizontalScroll(rememberScrollState()),
-                )
-            }
+@Composable
+private fun TechnicalDetails(n: NotificationEntity) {
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    TextButton(onClick = { expanded = !expanded }) {
+        Icon(
+            if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+            contentDescription = null,
+        )
+        Text(if (expanded) "Hide technical details" else "Show technical details")
+    }
+    if (!expanded) return
+
+    Section("Fields") {
+        Field("Title", n.title)
+        Field("Text", n.text)
+        Field("Big text", n.bigText)
+        Field("Sub text", n.subText)
+        Field("Summary", n.summaryText)
+        Field("Info", n.infoText)
+        Field("Inbox lines", n.textLines)
+        Field("Messages", n.messages)
+        Field("Ticker", n.tickerText)
+        Field("Package", n.packageName)
+        Field("Channel", n.channelId)
+        Field("Category", n.category)
+        Field("Posted", Fmt.long(n.postedAt))
+        Field("Stored", Fmt.long(n.receivedAt))
+        Field("Notification key", n.notificationKey)
+        Field("Row id", n.id.toString())
+    }
+
+    Section("Raw extras (JSON)") {
+        val pretty = remember(n.rawExtras) {
+            runCatching { JSONObject(n.rawExtras).toString(2) }.getOrDefault(n.rawExtras)
+        }
+        SelectionContainer {
+            Text(
+                pretty,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 12.sp,
+                lineHeight = 16.sp,
+                modifier = Modifier.horizontalScroll(rememberScrollState()),
+            )
+        }
+    }
+}
+
+@Composable
+private fun DirectionField(direction: String?) {
+    val (label, rotation, color) = when (direction) {
+        "IN" -> Triple("Money in", 90f, amountColor(direction))
+        "OUT" -> Triple("Money out", -90f, amountColor(direction))
+        else -> return
+    }
+    // ArrowBack is auto-mirrored, so in RTL it starts pointing right; flip the rotation to keep up/down.
+    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    Column {
+        Text(
+            "Direction",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = null,
+                modifier = Modifier.graphicsLayer { rotationZ = if (rtl) -rotation else rotation },
+                tint = color,
+            )
+            Text(label, style = MaterialTheme.typography.bodyMedium)
         }
     }
 }

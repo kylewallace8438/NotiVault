@@ -45,7 +45,7 @@ A generic parser (`parsing/GenericAmountParser.kt`) already handles common forma
 To add a bank:
 
 1. Let the app collect a few real notifications from it.
-2. Open one, long-press the **Full text** to copy it, and note the **Package** shown under Fields.
+2. Open one, long-press the **Full text** to copy it, and note the **Package** shown under Fields (tap **Show technical details**).
 3. Copy `parsing/TemplateBankParser.kt` to e.g. `MyBankParser.kt`. Set the package name and write regexes against that text (regex101.com with the "Java 8" flavor is handy).
 4. Add it to `parsing/ParserRegistry.kt` **above** `GenericAmountParser`.
 5. Reinstall, then Settings > **Re-run parsers** to apply it to everything already stored.
