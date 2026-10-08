@@ -60,8 +60,13 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
+import androidx.compose.material.icons.filled.Menu
+
 @Composable
-fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit) {
+fun SettingsScreen(
+    vm: MainViewModel,
+    onOpenDrawer: () -> Unit
+) {
     val context = LocalContext.current
     val status by AppStatus.state.collectAsStateWithLifecycle()
     val connected by AppStatus.listenerConnected.collectAsStateWithLifecycle()
@@ -70,13 +75,14 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
     val show: (String) -> Unit = { msg -> scope.launch { snackbar.showSnackbar(msg) } }
     var confirmClear by remember { mutableStateOf(false) }
+    var lastRequestedTestWasPositive by remember { mutableStateOf(true) }
 
-    fun sendTest() {
+    fun sendTest(positive: Boolean) {
         if (!AppStatus.state.value.listenerGranted) {
             show("Turn on notification access first")
             return
         }
-        TestNotification.send(context)
+        TestNotification.send(context, positive)
         show("Test sent. Go back to see it in the list.")
     }
 
@@ -84,7 +90,7 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit) {
         ActivityResultContracts.RequestPermission()
     ) { granted ->
         AppStatus.refresh(context)
-        if (granted) sendTest() else show("Notification permission was denied")
+        if (granted) sendTest(lastRequestedTestWasPositive) else show("Notification permission was denied")
     }
 
     val exportJson = rememberLauncherForActivityResult(
@@ -103,8 +109,8 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit) {
             TopAppBar(
                 title = { Text("Settings") },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    IconButton(onClick = onOpenDrawer) {
+                        Icon(Icons.Default.Menu, contentDescription = "Menu")
                     }
                 },
             )
@@ -161,13 +167,25 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit) {
                         "the listener, database and parser all work.",
                     style = MaterialTheme.typography.bodyMedium,
                 )
-                FilledTonalButton(onClick = {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !status.canPostNotifications) {
-                        notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
-                    } else {
-                        sendTest()
-                    }
-                }) { Text("Send test notification") }
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    FilledTonalButton(onClick = {
+                        lastRequestedTestWasPositive = true
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !status.canPostNotifications) {
+                            notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        } else {
+                            sendTest(positive = true)
+                        }
+                    }, modifier = Modifier.weight(1f)) { Text("+ Positive") }
+                    
+                    FilledTonalButton(onClick = {
+                        lastRequestedTestWasPositive = false
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !status.canPostNotifications) {
+                            notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        } else {
+                            sendTest(positive = false)
+                        }
+                    }, modifier = Modifier.weight(1f)) { Text("- Negative") }
+                }
             }
 
             Group("Data") {

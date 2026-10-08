@@ -30,11 +30,26 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     /** null = all apps */
     val selectedPackage = MutableStateFlow<String?>(null)
     val query = MutableStateFlow("")
+    private val limit = MutableStateFlow(10)
+
+    fun setQuery(q: String) {
+        query.value = q
+        limit.value = 10
+    }
+
+    fun setSelectedPackage(pkg: String?) {
+        selectedPackage.value = pkg
+        limit.value = 10
+    }
+
+    fun loadMore() {
+        limit.value += 10
+    }
 
     /** null while loading */
     val notifications: StateFlow<List<NotificationEntity>?> =
-        combine(selectedPackage, query.debounce(200)) { pkg, q -> pkg to q.trim().ifEmpty { null } }
-            .flatMapLatest { (pkg, q) -> dao.observe(pkg, q, 1000) }
+        combine(selectedPackage, query.debounce(200), limit) { pkg, q, l -> Triple(pkg, q.trim().ifEmpty { null }, l) }
+            .flatMapLatest { (pkg, q, l) -> dao.observe(pkg, q, l) }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     val sources: StateFlow<List<SourceCount>> =
@@ -45,6 +60,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     val watched: StateFlow<Set<String>> =
         app.watchedApps.flow.stateIn(viewModelScope, SharingStarted.Eagerly, app.watchedApps.get())
+
+    val withAmount: StateFlow<List<NotificationEntity>> =
+        dao.observeWithAmount().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     fun observe(id: Long): Flow<NotificationEntity?> = dao.observeById(id)
 

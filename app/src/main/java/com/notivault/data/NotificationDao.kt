@@ -48,6 +48,9 @@ interface NotificationDao {
     @Query("SELECT COUNT(*) FROM notifications")
     suspend fun count(): Int
 
+    @Query("SELECT * FROM notifications WHERE amount IS NOT NULL ORDER BY postedAt ASC")
+    fun observeWithAmount(): Flow<List<NotificationEntity>>
+
     @Query("DELETE FROM notifications WHERE id = :id")
     suspend fun deleteById(id: Long)
 

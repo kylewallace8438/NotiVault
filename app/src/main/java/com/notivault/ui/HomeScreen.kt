@@ -33,7 +33,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -42,13 +45,16 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.notivault.service.AppStatus
 import com.notivault.service.SystemScreens
+import androidx.compose.foundation.lazy.rememberLazyListState
+
+import androidx.compose.material.icons.filled.Menu
 
 @Composable
 fun HomeScreen(
     vm: MainViewModel,
     onOpenDetail: (Long) -> Unit,
     onOpenApps: () -> Unit,
-    onOpenSettings: () -> Unit,
+    onOpenDrawer: () -> Unit,
 ) {
     val context = LocalContext.current
     val status by AppStatus.state.collectAsStateWithLifecycle()
@@ -59,20 +65,40 @@ fun HomeScreen(
     val query by vm.query.collectAsStateWithLifecycle()
     val total by vm.totalCount.collectAsStateWithLifecycle()
 
+    val listState = rememberLazyListState()
+
+    val isAtBottom by remember {
+        derivedStateOf {
+            val layoutInfo = listState.layoutInfo
+            val totalItemsNumber = layoutInfo.totalItemsCount
+            val lastVisibleItemIndex = (layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0) + 1
+            lastVisibleItemIndex >= totalItemsNumber && totalItemsNumber > 0
+        }
+    }
+
+    LaunchedEffect(isAtBottom) {
+        if (isAtBottom && rows?.isNotEmpty() == true) {
+            vm.loadMore()
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("NotiVault") },
+                title = { Text("Overview") },
+                navigationIcon = {
+                    IconButton(onClick = onOpenDrawer) {
+                        Icon(Icons.Default.Menu, contentDescription = "Menu")
+                    }
+                },
                 actions = {
                     TextButton(onClick = onOpenApps) { Text("Apps (${watched.size})") }
-                    IconButton(onClick = onOpenSettings) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
-                    }
                 },
             )
         },
     ) { padding ->
         LazyColumn(
+            state = listState,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
@@ -107,13 +133,13 @@ fun HomeScreen(
             item(key = "search") {
                 OutlinedTextField(
                     value = query,
-                    onValueChange = { vm.query.value = it },
+                    onValueChange = { vm.setQuery(it) },
                     modifier = Modifier.fillMaxWidth(),
                     placeholder = { Text("Search text") },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     trailingIcon = {
                         if (query.isNotEmpty()) {
-                            IconButton(onClick = { vm.query.value = "" }) {
+                            IconButton(onClick = { vm.setQuery("") }) {
                                 Icon(Icons.Default.Clear, contentDescription = "Clear search")
                             }
                         }
@@ -129,7 +155,7 @@ fun HomeScreen(
                         item(key = "all") {
                             FilterChip(
                                 selected = selected == null,
-                                onClick = { vm.selectedPackage.value = null },
+                                onClick = { vm.setSelectedPackage(null) },
                                 label = { Text("All ($total)") },
                             )
                         }
@@ -137,8 +163,9 @@ fun HomeScreen(
                             FilterChip(
                                 selected = selected == s.packageName,
                                 onClick = {
-                                    vm.selectedPackage.value =
+                                    vm.setSelectedPackage(
                                         if (selected == s.packageName) null else s.packageName
+                                    )
                                 },
                                 label = { Text("${s.appLabel} (${s.count})") },
                             )

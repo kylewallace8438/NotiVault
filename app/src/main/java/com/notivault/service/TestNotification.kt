@@ -11,18 +11,22 @@ object TestNotification {
 
     const val CHANNEL_ID = "notivault_test"
 
-    private val samples = listOf(
+    private val positiveSamples = listOf(
         "+1,250,000 VND from NGUYEN VAN A. Balance: 8,430,000 VND",
-        "-89,000 VND paid to GRAB FOOD. Balance: 8,341,000 VND",
         "TK 1234xxx789|GD: +2,500,000VND|SD: 12,345,678VND|ND: TRAN THI B chuyen tien",
     )
+    
+    private val negativeSamples = listOf(
+        "-89,000 VND paid to GRAB FOOD. Balance: 8,341,000 VND",
+        "TK 1234xxx789 GD: -3,500,000VND. SD: 12,345,678VND. Rut tien ATM",
+    )
 
-    fun send(context: Context) {
+    fun send(context: Context, positive: Boolean) {
         val nm = context.getSystemService(NotificationManager::class.java) ?: return
         nm.createNotificationChannel(
             NotificationChannel(CHANNEL_ID, "Test notifications", NotificationManager.IMPORTANCE_DEFAULT)
         )
-        val text = samples.random()
+        val text = if (positive) positiveSamples.random() else negativeSamples.random()
         val notification = Notification.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle("Test bank")
